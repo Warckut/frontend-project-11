@@ -11,4 +11,11 @@ overrides: []
 parserOptions:
   ecmaVersion: latest
   sourceType: module
-rules: {}
+rules: 
+  no-console: 0
+  no-underscore-dangle: [2, { "allow": ["__filename", "__dirname"] }]
+  import/no-extraneous-dependencies: "off"
+  import/extensions:
+    - error
+    - ignorePackages
+    - js: always
