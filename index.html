@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <title>Webpack App</title>
+    </head>
+    <body>
+        <div class="container">
+            <form class="m-3 mt-5">
+                <div class="mb-3 g-3 row align-items-center w-100">
+                    <div class="col-auto">
+                        <label for="search" class="col-form-label">Запрос</label>
+                    </div>
+                    <div class="col-sm">
+                        <input type="text" id="search" class="form-control" placeholder="">
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-primary" type="submit">Поиск</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </body>
+    
+    <script>
+        if ("serviceWorker" in navigator) {
+            window.addEventListener("load", () => {
+                navigator.serviceWorker
+                    .register("service-worker.js")
+                    .then((registration) => {
+                        console.log("Service Worker registered: ", registration);
+                    })
+                    .catch((registrationError) => {
+                        console.error("Service Worker registration failed: ", registrationError);
+                    });
+            });
+        }
+    </script>
+</html>
