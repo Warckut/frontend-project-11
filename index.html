@@ -5,21 +5,40 @@
         <title>Webpack App</title>
     </head>
     <body>
-        <div class="container">
-            <form class="m-3 mt-5">
-                <div class="mb-3 g-3 row align-items-center w-100">
-                    <div class="col-auto">
-                        <label for="search" class="col-form-label">Запрос</label>
-                    </div>
-                    <div class="col-sm">
-                        <input type="text" id="search" class="form-control" placeholder="">
-                    </div>
-                    <div class="col-auto">
-                        <button class="btn btn-primary" type="submit">Поиск</button>
+        <main>
+            <section class="container-fluid bg-dark p-5">
+                <div class="row">
+                    <div class="col-md-10 col-lg-8 mx-auto text-white">
+                        <h1 class="display-3 mb-0">RSS агрегатор</h1>
+                        <p class="lead">Начните читать RSS сегодня! Это легко, это красиво.</p>
+                        <form action="" class="rss-form text-body">
+                            <div class="row">
+                                <div class="col">
+                                    <div class="form-floating">
+                                        <input type="text" id="url-input" autofocus="" required="" name="url" aria-label="url" class="form-control w-100" placeholder="ссылка RSS" autocomplete="off">
+                                        <label for="url-input">Ссылка RSS</label>
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <button type="submit" aria-label="add" class="h-100 btn btn-lg btn-primary px-sm-5">Добавить</button>
+                                </div>
+                            </div>
+                        </form>
+                        <p class="feedback mt-2 position-absolute small"></p>
                     </div>
                 </div>
-            </form>
-        </div>
+            </section>
+            <section class="container-fluid pb-3 mt-3">
+                <div class="d-grid gap-3" style="grid-template-columns: 1fr 2fr;">
+                    <div class="bg-body-tertiary border rounded-3">
+                    <br><br><br><br><br><br><br><br><br><br>
+                    </div>
+                    <div class="bg-body-tertiary border rounded-3">
+                    <br><br><br><br><br><br><br><br><br><br>
+                    </div>
+                </div>
+            </section>
+        </main>
     </body>
     
     <script>
