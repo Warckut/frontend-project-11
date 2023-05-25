@@ -1,9 +1,5 @@
 export default {
   translation: {
-    languages: {
-      en: 'English',
-      ru: 'Русский',
-    },
     buttons: {
       add: 'Add',
     },
@@ -12,10 +8,21 @@ export default {
     labels: {
       forUrlInput: 'RSS Link',
     },
+    feedbackSuccess: 'RSS uploaded successfully',
     errors: {
-      url: {
-        ValidationError: 'The link must be a valid URL',
+      ParserError: {
+        invalidRSS: 'The resource does not contain valid RSS',
       },
+      ValidationError: {
+        invalidURL: 'The link must be a valid URL',
+        alreadyAddedRSS: 'RSS already exists',
+      },
+    },
+    posts: {
+      header: 'Posts',
+    },
+    feeds: {
+      header: 'Feeds',
     },
   },
 };

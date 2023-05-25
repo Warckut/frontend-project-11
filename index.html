@@ -15,7 +15,7 @@
                             <div class="row">
                                 <div class="col">
                                     <div class="form-floating">
-                                        <input type="text" id="url-input" autofocus required="" name="url" aria-label="url" class="form-control w-100" placeholder="ссылка RSS" autocomplete="off">
+                                        <input type="text" id="url-input" autofocus required="" value="http://lorem-rss.herokuapp.com/feed" name="url" aria-label="url" class="form-control w-100" placeholder="ссылка RSS" autocomplete="off">
                                         <label for="url-input">Ссылка RSS</label>
                                     </div>
                                 </div>
@@ -28,13 +28,13 @@
                     </div>
                 </div>
             </section>
-            <section class="container-fluid pb-3 mt-3">
-                <div class="d-grid gap-3" style="grid-template-columns: 1fr 2fr;">
-                    <div class="bg-body-tertiary border rounded-3">
-                    <br><br><br><br><br><br><br><br><br><br>
+            <section class="container-fluid p-5 mt-3">
+                <div class="row">
+                    <div class="col-md-10 col-lg-8 order-1 mx-auto">
+                        <div class="card border-0 posts"></div>
                     </div>
-                    <div class="bg-body-tertiary border rounded-3">
-                    <br><br><br><br><br><br><br><br><br><br>
+                    <div class="col-md-10 col-lg-4 order-0 mx-auto order-lg-1">
+                        <div class="card border-0 feeds"></div>
                     </div>
                 </div>
             </section>
