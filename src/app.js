@@ -11,6 +11,7 @@ import parserRSS from './parser.js';
 const viaProxy = (url) => {
   const proxy = new URL('https://allorigins.hexlet.app/get');
   proxy.searchParams.append('url', url);
+  proxy.searchParams.append('disableCache', 'true');
   return proxy;
 };
 
@@ -28,10 +29,50 @@ const fetchData = (url) => axios.get(viaProxy(url))
   })
   .then((data) => {
     const parser = parserRSS(data.contents);
-    const feed = { id: _.uniqueId(), ...parser.getFeed() };
-    const posts = parser.getPosts().map((post) => ({ feedId: feed.id, ...post }));
-    return { feed, posts };
+    return { feed: parser.getFeed(), posts: parser.getPosts() };
   });
+
+const uploadPosts = (state) => {
+  const promises = state.feeds
+    .map(({ feedId, url }) => fetchData(url)
+      .then(({ posts }) => {
+        const namesloadedPosts = state.posts
+          .filter((post) => post.feedId === feedId)
+          .map((post) => post.title);
+        const newPosts = posts
+          .filter((post) => !namesloadedPosts.includes(post.title))
+          .map((post) => ({ feedId, ...post }));
+        if (newPosts.length > 0) state.posts = [...newPosts, ...state.posts];
+      })
+      .catch((error) => {
+        state.error = error;
+        state.processState = 'filling';
+      }));
+  Promise.all(promises).then(() => {
+    setTimeout(uploadPosts, 5000, state);
+  });
+};
+
+const submitFormHandler = (e, state) => {
+  e.preventDefault();
+  state.processState = 'loading';
+  const formData = new FormData(e.target);
+  const url = formData.get('url');
+  validate(url, state.parsedURLs)
+    .then(fetchData)
+    .then(({ feed, posts }) => {
+      state.feeds = [{ id: _.uniqueId(), url, ...feed }, ...state.feeds];
+      state.posts = [...posts.map((post) => ({ feedId: feed.id, ...post })), ...state.posts];
+      state.error = null;
+      state.processState = 'loaded';
+      state.parsedURLs.push(url);
+    })
+    .catch((error) => {
+      console.log(error);
+      state.error = error;
+      state.processState = 'filling';
+    });
+};
 
 const app = (i18nInstance) => {
   const elements = {
@@ -56,26 +97,9 @@ const app = (i18nInstance) => {
 
   const state = onChange(initialState, render(elements, i18nInstance));
 
-  elements.form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    state.processState = 'loading';
-    const formData = new FormData(e.target);
-    const url = formData.get('url');
-    validate(url, state.parsedURLs)
-      .then(fetchData)
-      .then(({ feed, posts }) => {
-        state.feeds = [feed, ...state.feeds];
-        state.posts = [...posts, ...state.posts];
-        state.error = null;
-        state.processState = 'loaded';
-        state.parsedURLs.push(url);
-      })
-      .catch((error) => {
-        console.log(error);
-        state.error = error;
-        state.processState = 'filling';
-      });
-  });
+  elements.form.addEventListener('submit', (e) => submitFormHandler(e, state));
+
+  setTimeout(uploadPosts, 5000, state);
 };
 
 export default () => {
