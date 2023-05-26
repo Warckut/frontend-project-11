@@ -118,9 +118,7 @@ const app = (i18nInstance) => {
   const elements = {
     form: document.querySelector('form'),
     submitButton: document.querySelector('form button'),
-    fields: {
-      url: document.querySelector('#url-input'),
-    },
+    fields: { url: document.querySelector('#url-input') },
     feedback: document.querySelector('p.feedback'),
     feeds: document.querySelector('.feeds'),
     posts: document.querySelector('.posts'),
@@ -140,7 +138,6 @@ const app = (i18nInstance) => {
     posts: [],
     error: null,
     processState: 'filling',
-    viewedPosts: [],
   };
 
   const state = onChange(initialState, render(elements, i18nInstance));
