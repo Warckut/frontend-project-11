@@ -1,7 +1,12 @@
 export default {
   translation: {
+    modal: {
+      btnPrimary: 'Read completely',
+      btnSecondary: 'Close',
+    },
     buttons: {
       add: 'Add',
+      viewing: 'Viewing',
     },
     header: 'RSS aggregator',
     desc: 'Start reading RSS today! It\'s easy, it\'s beautiful.',

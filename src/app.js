@@ -4,9 +4,17 @@ import axios from 'axios';
 import * as yup from 'yup';
 import onChange from 'on-change';
 
+import { Modal } from 'bootstrap';
 import render from './view.js';
 import resources from './locales/index.js';
-import parserRSS from './parser.js';
+import parseRSS from './parser.js';
+
+const getError = (name, message) => {
+  const error = new Error();
+  error.name = name;
+  error.message = message;
+  return error;
+};
 
 const viaProxy = (url) => {
   const proxy = new URL('https://allorigins.hexlet.app/get');
@@ -25,29 +33,42 @@ const validate = (url, parsedURLs) => yup
 const fetchData = (url) => axios.get(viaProxy(url))
   .then((response) => {
     if (response.statusText === 'OK') return response.data;
-    throw new Error('Network response was not ok.');
+    throw getError('ConnectionError', 'Network response was not ok');
   })
-  .then((data) => {
-    const parser = parserRSS(data.contents);
-    return { feed: parser.getFeed(), posts: parser.getPosts() };
+  .then(parseRSS)
+  .catch(() => {
+    throw getError('ParserError', 'invalidRSS');
   });
+
+const normalizePostCallback = (feedId) => (post) => ({
+  id: _.uniqueId(),
+  viewed: false,
+  feedId,
+  ...post,
+});
+
+const selectNewPosts = (posts, state, currFeedId) => {
+  const namesloadedPosts = state.posts
+    .filter((post) => post.feedId === currFeedId)
+    .map((post) => post.title);
+  return posts
+    .filter((post) => !namesloadedPosts.includes(post.title))
+    .map((post) => ({ feedId: currFeedId, viewed: false, ...post }));
+};
 
 const uploadPosts = (state) => {
   const promises = state.feeds
     .map(({ feedId, url }) => fetchData(url)
       .then(({ posts }) => {
-        const namesloadedPosts = state.posts
-          .filter((post) => post.feedId === feedId)
-          .map((post) => post.title);
-        const newPosts = posts
-          .filter((post) => !namesloadedPosts.includes(post.title))
-          .map((post) => ({ feedId, ...post }));
+        const newPosts = selectNewPosts(posts, state, feedId)
+          .map(normalizePostCallback(feedId));
         if (newPosts.length > 0) state.posts = [...newPosts, ...state.posts];
       })
       .catch((error) => {
         state.error = error;
         state.processState = 'filling';
       }));
+
   Promise.all(promises).then(() => {
     setTimeout(uploadPosts, 5000, state);
   });
@@ -58,20 +79,39 @@ const submitFormHandler = (e, state) => {
   state.processState = 'loading';
   const formData = new FormData(e.target);
   const url = formData.get('url');
-  validate(url, state.parsedURLs)
+  const parsedURLs = state.feeds.map((feed) => feed.url);
+  validate(url, parsedURLs)
     .then(fetchData)
     .then(({ feed, posts }) => {
       state.feeds = [{ id: _.uniqueId(), url, ...feed }, ...state.feeds];
-      state.posts = [...posts.map((post) => ({ feedId: feed.id, ...post })), ...state.posts];
+      state.posts = [
+        ...posts.map(normalizePostCallback(feed.id)),
+        ...state.posts,
+      ];
       state.error = null;
       state.processState = 'loaded';
-      state.parsedURLs.push(url);
     })
     .catch((error) => {
-      console.log(error);
       state.error = error;
       state.processState = 'filling';
     });
+};
+
+const clickPostHandler = (e, state, elements) => {
+  if (e.target.getAttribute('data-bs-toogle') === 'modal') {
+    const viewedPost = state.posts.find(({ id }) => id === e.target.getAttribute('data-id'));
+    elements.modal.title.textContent = viewedPost.title;
+    elements.modal.description.textContent = viewedPost.description;
+    elements.modal.btnPrimary.setAttribute('href', viewedPost.link);
+
+    state.posts = state.posts.map((el) => {
+      if (el.id === viewedPost.id) el.viewed = true;
+      return el;
+    });
+
+    const modal = new Modal(document.querySelector('#exampleModal'));
+    modal.show();
+  }
 };
 
 const app = (i18nInstance) => {
@@ -84,6 +124,13 @@ const app = (i18nInstance) => {
     feedback: document.querySelector('p.feedback'),
     feeds: document.querySelector('.feeds'),
     posts: document.querySelector('.posts'),
+    modal: {
+      modal: document.querySelector('#exampleModal'),
+      title: document.querySelector('#exampleModalLabel'),
+      description: document.querySelector('.modal-body'),
+      btnPrimary: document.querySelector('a.btn-primary'),
+      btnSecondary: document.querySelector('button.btn-secondary'),
+    },
   };
 
   const initialState = {
@@ -93,11 +140,12 @@ const app = (i18nInstance) => {
     posts: [],
     error: null,
     processState: 'filling',
+    viewedPosts: [],
   };
 
   const state = onChange(initialState, render(elements, i18nInstance));
-
   elements.form.addEventListener('submit', (e) => submitFormHandler(e, state));
+  elements.posts.addEventListener('click', (e) => clickPostHandler(e, state, elements));
 
   setTimeout(uploadPosts, 5000, state);
 };

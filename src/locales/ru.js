@@ -1,7 +1,12 @@
 export default {
   translation: {
+    modal: {
+      btnPrimary: 'Читать полностью',
+      btnSecondary: 'Закрыть',
+    },
     buttons: {
       add: 'Добавить',
+      viewing: 'Просмотр',
     },
     header: 'RSS агрегатор',
     desc: 'Начните читать RSS сегодня! Это легко, это красиво.',

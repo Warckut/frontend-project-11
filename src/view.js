@@ -20,30 +20,19 @@ const renderProcessState = (elements, processState, i18nInstance) => {
 };
 
 const renderError = (elements, error, prevError, i18nInstance) => {
-  switch (error?.name) {
-    case 'ValidationError':
-      if (!prevError) {
-        elements.feedback.classList.add('text-danger');
-        elements.fields.url.classList.add('is-invalid');
-      }
-      elements.feedback.textContent = i18nInstance.t(`errors.ValidationError.${error.message}`);
-      break;
+  if (error) {
+    if (!prevError) {
+      elements.feedback.classList.add('text-danger');
+      elements.fields.url.classList.add('is-invalid');
+    }
+    elements.feedback.textContent = i18nInstance.t(`errors.${error.name}.${error.message}`);
+    return;
+  }
 
-    case 'ParserError':
-      if (!prevError) {
-        elements.feedback.classList.add('text-danger');
-        elements.fields.url.classList.add('is-invalid');
-      }
-      elements.feedback.textContent = i18nInstance.t(`errors.ParserError.${error.message}`);
-      break;
-
-    default:
-      if (prevError) {
-        elements.feedback.classList.remove('text-danger');
-        elements.feedback.textContent = '';
-        elements.fields.url.classList.remove('is-invalid');
-      }
-      break;
+  if (prevError) {
+    elements.feedback.classList.remove('text-danger');
+    elements.feedback.textContent = '';
+    elements.fields.url.classList.remove('is-invalid');
   }
 };
 
@@ -53,6 +42,9 @@ const initialRender = (elements, i18nInstance) => {
   document.querySelector('p.lead').textContent = i18nInstance.t('desc');
   document.querySelector('#url-input')
     .nextElementSibling.textContent = i18nInstance.t('labels.forUrlInput');
+
+  elements.modal.btnPrimary.textContent = i18nInstance.t('modal.btnPrimary');
+  elements.modal.btnSecondary.textContent = i18nInstance.t('modal.btnSecondary');
 };
 
 const renderPosts = (elements, value, i18nInstance) => {
@@ -64,16 +56,36 @@ const renderPosts = (elements, value, i18nInstance) => {
   headerContainer.append(header);
 
   const postsElements = value.map(({
+    id,
     title,
     link,
+    viewed,
   }) => {
     const el = document.createElement('li');
-    el.classList.add('posts__item', 'list-group-item', 'border-0', 'border-end-0');
+    const classListForListGroupItem = [
+      'd-flex',
+      'justify-content-between',
+      'align-items-start',
+      'posts__item',
+      'list-group-item',
+      'border-0', 'border-end-0',
+    ];
+    el.classList.add(...classListForListGroupItem);
+
     const titleEl = document.createElement('a');
     titleEl.textContent = title;
     titleEl.classList.add('fw-bold');
+    if (viewed) titleEl.classList.add('fw-normal', 'link-secondary');
     titleEl.setAttribute('href', link);
-    el.append(titleEl);
+
+    const btn = document.createElement('button');
+    btn.classList.add('btn', 'btn-outline-primary', 'btn-sm');
+    btn.setAttribute('data-bs-toogle', 'modal');
+    btn.setAttribute('data-bs-target', '#exampleModal');
+    btn.setAttribute('data-id', id);
+    btn.textContent = i18nInstance.t('buttons.viewing');
+
+    el.append(titleEl, btn);
     return el;
   });
   const ul = document.createElement('ul');
