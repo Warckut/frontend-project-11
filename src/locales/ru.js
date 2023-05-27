@@ -22,6 +22,9 @@ export default {
         invalidURL: 'Ссылка должна быть валидным URL',
         alreadyAddedRSS: 'RSS уже существует',
       },
+      RequestError: {
+        NOTFOUND: 'Указаный адрес не найден',
+      },
     },
     posts: {
       header: 'Посты',

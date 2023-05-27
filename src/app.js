@@ -32,12 +32,16 @@ const validate = (url, parsedURLs) => yup
 
 const fetchData = (url) => axios.get(viaProxy(url))
   .then((response) => {
-    if (response.statusText === 'OK') return response.data;
-    throw getError('ConnectionError', 'Network response was not ok');
+    const { error } = response.data.status;
+    if (error) throw getError(error.name, error.code.slice(1));
+    return response.data;
   })
-  .then(parseRSS)
-  .catch(() => {
-    throw getError('ParserError', 'invalidRSS');
+  .then((data) => {
+    try {
+      return parseRSS(data);
+    } catch (e) {
+      throw getError('ParserError', 'invalidRSS');
+    }
   });
 
 const normalizePostCallback = (feedId) => (post) => ({
