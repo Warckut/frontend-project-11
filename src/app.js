@@ -18,7 +18,7 @@ const getError = (name, message) => {
 
 const viaProxy = (url) => {
   const proxy = new URL('https://allorigins.hexlet.app/get');
-  proxy.searchParams.append('url', url);
+  proxy.searchParams.append('url', encodeURIComponent(url));
   proxy.searchParams.append('disableCache', 'true');
   return proxy;
 };
@@ -73,7 +73,7 @@ const uploadPosts = (state) => {
         state.processState = 'filling';
       }));
 
-  Promise.all(promises).then(() => {
+  Promise.all(promises).finally(() => {
     setTimeout(uploadPosts, 5000, state);
   });
 };
@@ -82,7 +82,7 @@ const submitFormHandler = (e, state) => {
   e.preventDefault();
   state.processState = 'loading';
   const formData = new FormData(e.target);
-  const url = formData.get('url');
+  const url = formData.get('url').trim();
   const parsedURLs = state.feeds.map((feed) => feed.url);
   validate(url, parsedURLs)
     .then(fetchData)
