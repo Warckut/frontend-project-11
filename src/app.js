@@ -18,7 +18,7 @@ const getError = (name, message) => {
 
 const viaProxy = (url) => {
   const proxy = new URL('https://allorigins.hexlet.app/get');
-  proxy.searchParams.append('url', encodeURIComponent(url));
+  proxy.searchParams.append('url', url);
   proxy.searchParams.append('disableCache', 'true');
   return proxy;
 };
