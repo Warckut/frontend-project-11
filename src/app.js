@@ -30,7 +30,7 @@ const validate = (url, parsedURLs) => yup
   .notOneOf(parsedURLs, 'alreadyAddedRSS')
   .validate(url);
 
-const fetchData = (url) => axios.get(viaProxy(url))
+const fetchData = (url) => axios.get(viaProxy(url), { timeout: 10000 })
   .then((response) => {
     const { error } = response.data.status;
     if (error) throw getError(error.name, error.code.slice(1));
