@@ -12,6 +12,7 @@ const renderProcessState = (elements, processState, i18nInstance) => {
       elements.feedback.textContent = i18nInstance.t('feedbackSuccess');
       elements.feedback.classList.add('text-success');
       elements.submitButton.disabled = false;
+      elements.fields.url.value = '';
       break;
 
     default:
@@ -59,7 +60,6 @@ const renderPosts = (elements, value, i18nInstance) => {
     id,
     title,
     link,
-    viewed,
   }) => {
     const el = document.createElement('li');
     const classListForListGroupItem = [
@@ -71,18 +71,17 @@ const renderPosts = (elements, value, i18nInstance) => {
       'border-0', 'border-end-0',
     ];
     el.classList.add(...classListForListGroupItem);
+    el.setAttribute('data-id', id);
 
     const titleEl = document.createElement('a');
     titleEl.textContent = title;
     titleEl.classList.add('fw-bold');
-    if (viewed) titleEl.classList.add('fw-normal', 'link-secondary');
     titleEl.setAttribute('href', link);
 
     const btn = document.createElement('button');
     btn.classList.add('btn', 'btn-outline-primary', 'btn-sm');
     btn.setAttribute('data-bs-toogle', 'modal');
     btn.setAttribute('data-bs-target', '#exampleModal');
-    btn.setAttribute('data-id', id);
     btn.textContent = i18nInstance.t('buttons.viewing');
 
     el.append(titleEl, btn);
@@ -123,6 +122,17 @@ const renderFeeds = (elements, value, i18nInstance) => {
   elements.feeds.replaceChildren(headerContainer, ul);
 };
 
+const renderViewedPost = (elements, value) => {
+  const titlePost = elements.posts.querySelector(`[data-id="${value}"] a`);
+  titlePost.classList.add('fw-normal', 'link-secondary');
+};
+
+const renderModal = (elements, { title, description, link }) => {
+  elements.modal.title.textContent = title;
+  elements.modal.description.textContent = description;
+  elements.modal.btnPrimary.setAttribute('href', link);
+};
+
 export default (elements, i18nInstance) => {
   initialRender(elements, i18nInstance);
 
@@ -146,6 +156,14 @@ export default (elements, i18nInstance) => {
 
       case 'error':
         renderError(elements, value, prev, i18nInstance);
+        break;
+
+      case 'UIState.newViewedPost':
+        renderViewedPost(elements, value);
+        break;
+
+      case 'modalData':
+        renderModal(elements, value);
         break;
 
       default:
