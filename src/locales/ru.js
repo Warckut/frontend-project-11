@@ -15,15 +15,15 @@ export default {
     },
     feedbackSuccess: 'RSS успешно загружен',
     errors: {
+      AxiosError: {
+        'Network Error': 'Ошибка сети',
+      },
       ParserError: {
         invalidRSS: 'Ресурс не содержит валидный RSS',
       },
       ValidationError: {
         invalidURL: 'Ссылка должна быть валидным URL',
         alreadyAddedRSS: 'RSS уже существует',
-      },
-      RequestError: {
-        NOTFOUND: 'Указаный адрес не найден',
       },
     },
     posts: {

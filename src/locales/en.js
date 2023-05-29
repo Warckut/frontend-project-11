@@ -15,15 +15,15 @@ export default {
     },
     feedbackSuccess: 'RSS uploaded successfully',
     errors: {
+      AxiosError: {
+        'Network Error': 'Network error',
+      },
       ParserError: {
         invalidRSS: 'The resource does not contain valid RSS',
       },
       ValidationError: {
         invalidURL: 'The link must be a valid URL',
         alreadyAddedRSS: 'RSS already exists',
-      },
-      HttpError: {
-        NOTFOUND: 'URL not found',
       },
     },
     posts: {
