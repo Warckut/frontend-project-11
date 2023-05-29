@@ -37,13 +37,6 @@ const fetchData = (url) => axios.get(viaProxy(url), { timeout: 10000 })
       throw getError(error.name, error.code.slice(1));
     }
     return response.data;
-  })
-  .then((data) => {
-    try {
-      return parseRSS(data);
-    } catch (e) {
-      throw getError('ParserError', 'invalidRSS');
-    }
   });
 
 const normalizePostCallback = (feedId) => (post) => ({
@@ -65,14 +58,20 @@ const selectNewPosts = (posts, state, currFeedId) => {
 const uploadPosts = (state) => {
   const promises = state.feeds
     .map(({ feedId, url }) => fetchData(url)
+      .then((data) => {
+        try {
+          return parseRSS(data);
+        } catch (e) {
+          throw getError('ParserError', 'invalidRSS');
+        }
+      })
       .then(({ posts }) => {
         const newPosts = selectNewPosts(posts, state, feedId)
           .map(normalizePostCallback(feedId));
         if (newPosts.length > 0) state.posts = [...newPosts, ...state.posts];
       })
       .catch((error) => {
-        state.error = error;
-        state.processState = 'filling';
+        console.log(error);
       }));
 
   Promise.all(promises).finally(() => {
@@ -88,6 +87,14 @@ const submitFormHandler = (e, state) => {
   const parsedURLs = state.feeds.map((feed) => feed.url);
   validate(url, parsedURLs)
     .then(fetchData)
+    .then((data) => {
+      try {
+        return parseRSS(data);
+      } catch (err) {
+        console.log(err);
+        throw getError('ParserError', 'invalidRSS');
+      }
+    })
     .then(({ feed, posts }) => {
       state.feeds = [{ id: _.uniqueId(), url, ...feed }, ...state.feeds];
       state.posts = [
