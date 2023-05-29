@@ -9,13 +9,6 @@ import render from './view.js';
 import resources from './locales/index.js';
 import parseRSS from './parser.js';
 
-const getError = (name, message) => {
-  const error = new Error();
-  error.name = name;
-  error.message = message;
-  return error;
-};
-
 const viaProxy = (url) => {
   const proxy = new URL('get', 'https://allorigins.hexlet.app/');
   proxy.searchParams.append('url', url);
@@ -31,13 +24,7 @@ const validate = (url, parsedURLs) => yup
   .validate(url);
 
 const fetchData = (url) => axios.get(viaProxy(url), { timeout: 10000 })
-  .then((response) => {
-    if (response.data.status?.error) {
-      const { error } = response.data.status;
-      throw getError(error.name, error.code.slice(1));
-    }
-    return response.data;
-  });
+  .then((response) => response.data);
 
 const normalizePostCallback = (feedId) => (post) => ({
   id: _.uniqueId(),
@@ -46,29 +33,13 @@ const normalizePostCallback = (feedId) => (post) => ({
   ...post,
 });
 
-const selectNewPosts = (posts, state, currFeedId) => {
-  const namesloadedPosts = state.posts
-    .filter((post) => post.feedId === currFeedId)
-    .map((post) => post.title);
-  return posts
-    .filter((post) => !namesloadedPosts.includes(post.title))
-    .map((post) => ({ feedId: currFeedId, viewed: false, ...post }));
-};
-
 const uploadPosts = (state) => {
   const promises = state.feeds
     .map(({ feedId, url }) => fetchData(url)
       .then((data) => {
-        try {
-          return parseRSS(data);
-        } catch (e) {
-          throw getError('ParserError', 'invalidRSS');
-        }
-      })
-      .then(({ posts }) => {
-        const newPosts = selectNewPosts(posts, state, feedId)
-          .map(normalizePostCallback(feedId));
-        if (newPosts.length > 0) state.posts = [...newPosts, ...state.posts];
+        const { posts } = parseRSS(data.contents);
+        state.posts = [_.differenceBy(posts, state.posts, 'title')
+          .map(normalizePostCallback(feedId)), ...state.posts];
       })
       .catch((error) => {
         console.log(error);
@@ -82,20 +53,15 @@ const uploadPosts = (state) => {
 const submitFormHandler = (e, state) => {
   e.preventDefault();
   state.processState = 'loading';
+
   const formData = new FormData(e.target);
   const url = formData.get('url').trim();
   const parsedURLs = state.feeds.map((feed) => feed.url);
+
   validate(url, parsedURLs)
     .then(fetchData)
     .then((data) => {
-      try {
-        return parseRSS(data);
-      } catch (err) {
-        console.log(err);
-        throw getError('ParserError', 'invalidRSS');
-      }
-    })
-    .then(({ feed, posts }) => {
+      const { feed, posts } = parseRSS(data.contents);
       state.feeds = [{ id: _.uniqueId(), url, ...feed }, ...state.feeds];
       state.posts = [
         ...posts.map(normalizePostCallback(feed.id)),
@@ -110,17 +76,17 @@ const submitFormHandler = (e, state) => {
     });
 };
 
-const clickPostHandler = (e, state, elements) => {
+const clickPostHandler = (e, state) => {
   if (e.target.getAttribute('data-bs-toogle') === 'modal') {
-    const viewedPost = state.posts.find(({ id }) => id === e.target.getAttribute('data-id'));
-    elements.modal.title.textContent = viewedPost.title;
-    elements.modal.description.textContent = viewedPost.description;
-    elements.modal.btnPrimary.setAttribute('href', viewedPost.link);
+    const {
+      id,
+      title,
+      description,
+      link,
+    } = state.posts.find((post) => post.id === e.target.parentElement.getAttribute('data-id'));
 
-    state.posts = state.posts.map((el) => {
-      if (el.id === viewedPost.id) el.viewed = true;
-      return el;
-    });
+    state.modalData = { title, description, link };
+    state.UIState.newViewedPost = id;
 
     const modal = new Modal(document.querySelector('#exampleModal'));
     modal.show();
@@ -146,11 +112,18 @@ const app = (i18nInstance) => {
 
   const initialState = {
     lng: 'ru',
-    parsedURLs: [],
     feeds: [],
     posts: [],
     error: null,
     processState: 'filling',
+    UIState: {
+      newViewedPost: null,
+    },
+    modalData: {
+      title: '',
+      description: '',
+      link: '',
+    },
   };
 
   const state = onChange(initialState, render(elements, i18nInstance));
