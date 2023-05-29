@@ -17,7 +17,7 @@ const getError = (name, message) => {
 };
 
 const viaProxy = (url) => {
-  const proxy = new URL('https://allorigins.hexlet.app/get');
+  const proxy = new URL('get', 'https://allorigins.hexlet.app/');
   proxy.searchParams.append('url', url);
   proxy.searchParams.append('disableCache', 'true');
   return proxy;
@@ -32,8 +32,10 @@ const validate = (url, parsedURLs) => yup
 
 const fetchData = (url) => axios.get(viaProxy(url), { timeout: 10000 })
   .then((response) => {
-    const { error } = response.data.status;
-    if (error) throw getError(error.name, error.code.slice(1));
+    if (response.data.status?.error) {
+      const { error } = response.data.status;
+      throw getError(error.name, error.code.slice(1));
+    }
     return response.data;
   })
   .then((data) => {
