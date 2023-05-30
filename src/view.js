@@ -4,7 +4,7 @@ const renderProcessState = (elements, processState, i18nInstance) => {
       elements.submitButton.disabled = true;
       break;
 
-    case 'filling':
+    case 'notLoaded':
       elements.submitButton.disabled = false;
       break;
 

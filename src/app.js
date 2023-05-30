@@ -38,7 +38,7 @@ const uploadPosts = (state) => {
     .map(({ feedId, url }) => fetchData(url)
       .then((data) => {
         const { posts } = parseRSS(data.contents);
-        state.posts = [_.differenceBy(posts, state.posts, 'title')
+        state.posts = [..._.differenceBy(posts, state.posts, 'title')
           .map(normalizePostCallback(feedId)), ...state.posts];
       })
       .catch((error) => {
@@ -72,7 +72,7 @@ const submitFormHandler = (e, state) => {
     })
     .catch((error) => {
       state.error = error;
-      state.processState = 'filling';
+      state.processState = 'notLoaded';
     });
 };
 
@@ -115,7 +115,7 @@ const app = (i18nInstance) => {
     feeds: [],
     posts: [],
     error: null,
-    processState: 'filling',
+    processState: 'notLoaded',
     UIState: {
       newViewedPost: null,
     },
