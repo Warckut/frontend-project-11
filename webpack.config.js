@@ -1,16 +1,11 @@
 // Generated using webpack-cli https://github.com/webpack/webpack-cli
-import path from 'path';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
-import __dirname from './src/variables.js';
 
 const isProduction = process.env.NODE_ENV === 'production';
 
 const config = {
   entry: './src/index.js',
-  output: {
-    path: path.resolve(__dirname, '../public'),
-  },
   devServer: {
     open: true,
     host: 'localhost',
