@@ -4,10 +4,11 @@ import axios from 'axios';
 import * as yup from 'yup';
 import onChange from 'on-change';
 
-import { Modal } from 'bootstrap';
 import render from './view.js';
 import resources from './locales/index.js';
 import parseRSS from './parser.js';
+
+const timeoutRequest = 5000;
 
 const viaProxy = (url) => {
   const proxy = new URL('get', 'https://allorigins.hexlet.app/');
@@ -16,15 +17,23 @@ const viaProxy = (url) => {
   return proxy;
 };
 
+yup.setLocale({
+  mixed: {
+    notOneOf: 'alreadyAddedRSS',
+  },
+  string: {
+    url: 'invalidURL',
+  },
+});
+
 const validate = (url, parsedURLs) => yup
   .string()
-  .url('invalidURL')
+  .notOneOf(parsedURLs)
+  .url()
   .required()
-  .notOneOf(parsedURLs, 'alreadyAddedRSS')
   .validate(url);
 
-const fetchData = (url) => axios.get(viaProxy(url), { timeout: 10000 })
-  .then((response) => response.data);
+const fetchData = (url) => axios.get(viaProxy(url), { timeout: 10000 });
 
 const normalizePostCallback = (feedId) => (post) => ({
   id: _.uniqueId(),
@@ -36,7 +45,7 @@ const normalizePostCallback = (feedId) => (post) => ({
 const uploadPosts = (state) => {
   const promises = state.feeds
     .map(({ feedId, url }) => fetchData(url)
-      .then((data) => {
+      .then(({ data }) => {
         const { posts } = parseRSS(data.contents);
         state.posts = [..._.differenceBy(posts, state.posts, 'title')
           .map(normalizePostCallback(feedId)), ...state.posts];
@@ -46,7 +55,7 @@ const uploadPosts = (state) => {
       }));
 
   Promise.all(promises).finally(() => {
-    setTimeout(uploadPosts, 5000, state);
+    setTimeout(uploadPosts, timeoutRequest, state);
   });
 };
 
@@ -60,7 +69,7 @@ const submitFormHandler = (e, state) => {
 
   validate(url, parsedURLs)
     .then(fetchData)
-    .then((data) => {
+    .then(({ data }) => {
       const { feed, posts } = parseRSS(data.contents);
       state.feeds = [{ id: _.uniqueId(), url, ...feed }, ...state.feeds];
       state.posts = [
@@ -71,6 +80,7 @@ const submitFormHandler = (e, state) => {
       state.processState = 'loaded';
     })
     .catch((error) => {
+      console.log(error.errors);
       state.error = error;
       state.processState = 'notLoaded';
     });
@@ -78,18 +88,9 @@ const submitFormHandler = (e, state) => {
 
 const clickPostHandler = (e, state) => {
   if (e.target.getAttribute('data-bs-toogle') === 'modal') {
-    const {
-      id,
-      title,
-      description,
-      link,
-    } = state.posts.find((post) => post.id === e.target.parentElement.getAttribute('data-id'));
-
-    state.modalData = { title, description, link };
-    state.UIState.newViewedPost = id;
-
-    const modal = new Modal(document.querySelector('#exampleModal'));
-    modal.show();
+    const postId = e.target.parentElement.dataset.id;
+    state.modalData = postId;
+    state.UIState.viewedPosts = [...state.UIState.viewedPosts, postId];
   }
 };
 
@@ -102,7 +103,7 @@ const app = (i18nInstance) => {
     feeds: document.querySelector('.feeds'),
     posts: document.querySelector('.posts'),
     modal: {
-      modal: document.querySelector('#exampleModal'),
+      window: document.querySelector('#exampleModal'),
       title: document.querySelector('#exampleModalLabel'),
       description: document.querySelector('.modal-body'),
       btnPrimary: document.querySelector('a.btn-primary'),
@@ -111,26 +112,24 @@ const app = (i18nInstance) => {
   };
 
   const initialState = {
-    lng: 'ru',
     feeds: [],
     posts: [],
     error: null,
     processState: 'notLoaded',
     UIState: {
       newViewedPost: null,
+      viewedPosts: [],
     },
     modalData: {
-      title: '',
-      description: '',
-      link: '',
+      id: null,
     },
   };
 
-  const state = onChange(initialState, render(elements, i18nInstance));
+  const state = onChange(initialState, render(elements, i18nInstance, initialState));
   elements.form.addEventListener('submit', (e) => submitFormHandler(e, state));
   elements.posts.addEventListener('click', (e) => clickPostHandler(e, state, elements));
 
-  setTimeout(uploadPosts, 5000, state);
+  setTimeout(uploadPosts, timeoutRequest, state);
 };
 
 export default () => {
