@@ -1,3 +1,5 @@
+import { Modal } from 'bootstrap';
+
 const renderProcessState = (elements, processState, i18nInstance) => {
   switch (processState) {
     case 'loading':
@@ -48,7 +50,7 @@ const initialRender = (elements, i18nInstance) => {
   elements.modal.btnSecondary.textContent = i18nInstance.t('modal.btnSecondary');
 };
 
-const renderPosts = (elements, value, i18nInstance) => {
+const renderPosts = (elements, value, i18nInstance, state) => {
   const headerContainer = document.createElement('div');
   headerContainer.classList.add('card-body');
   const header = document.createElement('h2');
@@ -56,7 +58,7 @@ const renderPosts = (elements, value, i18nInstance) => {
   header.textContent = i18nInstance.t('posts.header');
   headerContainer.append(header);
 
-  const postsElements = value.map(({
+  const postsElements = state.posts.map(({
     id,
     title,
     link,
@@ -75,7 +77,11 @@ const renderPosts = (elements, value, i18nInstance) => {
 
     const titleEl = document.createElement('a');
     titleEl.textContent = title;
-    titleEl.classList.add('fw-bold');
+    if (state.UIState.viewedPosts.includes(id)) {
+      titleEl.classList.add('fw-normal', 'link-secondary');
+    } else {
+      titleEl.classList.add('fw-bold');
+    }
     titleEl.setAttribute('href', link);
 
     const btn = document.createElement('button');
@@ -122,18 +128,16 @@ const renderFeeds = (elements, value, i18nInstance) => {
   elements.feeds.replaceChildren(headerContainer, ul);
 };
 
-const renderViewedPost = (elements, value) => {
-  const titlePost = elements.posts.querySelector(`[data-id="${value}"] a`);
-  titlePost.classList.add('fw-normal', 'link-secondary');
-};
-
-const renderModal = (elements, { title, description, link }) => {
+const renderModal = (elements, idPost, state) => {
+  const { title, description, link } = state.posts.find((({ id }) => id === idPost));
   elements.modal.title.textContent = title;
   elements.modal.description.textContent = description;
   elements.modal.btnPrimary.setAttribute('href', link);
+  const modal = new Modal(elements.modal.window);
+  modal.show();
 };
 
-export default (elements, i18nInstance) => {
+export default (elements, i18nInstance, state) => {
   initialRender(elements, i18nInstance);
 
   return (path, value, prev) => {
@@ -147,7 +151,7 @@ export default (elements, i18nInstance) => {
         break;
 
       case 'posts':
-        renderPosts(elements, value, i18nInstance);
+        renderPosts(elements, value, i18nInstance, state);
         break;
 
       case 'processState':
@@ -158,12 +162,12 @@ export default (elements, i18nInstance) => {
         renderError(elements, value, prev, i18nInstance);
         break;
 
-      case 'UIState.newViewedPost':
-        renderViewedPost(elements, value);
+      case 'UIState.viewedPosts':
+        renderPosts(elements, value, i18nInstance, state);
         break;
 
       case 'modalData':
-        renderModal(elements, value);
+        renderModal(elements, value, state);
         break;
 
       default:
