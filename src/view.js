@@ -135,6 +135,7 @@ const renderModal = (elements, idPost, state) => {
   elements.modal.btnPrimary.setAttribute('href', link);
   const modal = new Modal(elements.modal.window);
   modal.show();
+  state.openedPostId = null;
 };
 
 export default (elements, i18nInstance, state) => {
@@ -166,8 +167,8 @@ export default (elements, i18nInstance, state) => {
         renderPosts(elements, value, i18nInstance, state);
         break;
 
-      case 'modalData':
-        renderModal(elements, value, state);
+      case 'openedPostId':
+        if (value) renderModal(elements, value, state);
         break;
 
       default:
