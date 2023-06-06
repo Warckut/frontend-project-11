@@ -7,6 +7,7 @@ import onChange from 'on-change';
 import render from './view.js';
 import resources from './locales/index.js';
 import parseRSS from './parser.js';
+import configValidate from './locales/validationConfigLocale.js.js';
 
 const timeoutRequest = 5000;
 
@@ -17,21 +18,15 @@ const viaProxy = (url) => {
   return proxy;
 };
 
-yup.setLocale({
-  mixed: {
-    notOneOf: 'alreadyAddedRSS',
-  },
-  string: {
-    url: 'invalidURL',
-  },
-});
-
-const validate = (url, parsedURLs) => yup
-  .string()
-  .notOneOf(parsedURLs)
-  .url()
-  .required()
-  .validate(url);
+const validate = (url, parsedURLs) => {
+  yup.setLocale(configValidate);
+  return yup
+    .string()
+    .notOneOf(parsedURLs)
+    .url()
+    .required()
+    .validate(url);
+};
 
 const fetchData = (url) => axios.get(viaProxy(url), { timeout: 10000 });
 
@@ -87,9 +82,9 @@ const submitFormHandler = (e, state) => {
 };
 
 const clickPostHandler = (e, state) => {
-  if (e.target.getAttribute('data-bs-toogle') === 'modal') {
+  if (e.target.dataset.bsToogle === 'modal') {
     const postId = e.target.parentElement.dataset.id;
-    state.modalData = postId;
+    state.openedPostId = postId;
     state.UIState.viewedPosts = [...state.UIState.viewedPosts, postId];
   }
 };
@@ -117,12 +112,9 @@ const app = (i18nInstance) => {
     error: null,
     processState: 'notLoaded',
     UIState: {
-      newViewedPost: null,
       viewedPosts: [],
     },
-    modalData: {
-      id: null,
-    },
+    openedPostId: null,
   };
 
   const state = onChange(initialState, render(elements, i18nInstance, initialState));
