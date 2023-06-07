@@ -7,7 +7,7 @@ import onChange from 'on-change';
 import render from './view.js';
 import resources from './locales/index.js';
 import parseRSS from './parser.js';
-import configValidate from './locales/validationConfigLocale.js.js';
+import yupLocale from './locales/yupLocale.js';
 
 const timeoutRequest = 5000;
 
@@ -18,15 +18,16 @@ const viaProxy = (url) => {
   return proxy;
 };
 
-const validate = (url, parsedURLs) => {
-  yup.setLocale(configValidate);
-  return yup
+const initValidate = () => {
+  yup.setLocale(yupLocale);
+  return (url, parsedURLs) => yup
     .string()
     .notOneOf(parsedURLs)
     .url()
     .required()
     .validate(url);
 };
+const validate = initValidate();
 
 const fetchData = (url) => axios.get(viaProxy(url), { timeout: 10000 });
 
